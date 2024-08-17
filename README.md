@@ -15,7 +15,7 @@ make build
 Run the executable file, supplying the `source` and `destination` directory
 
 ```bash
-./fs target/directory output/directory
+./fs source/directory destination/directory
 ```
 
 ```bash
