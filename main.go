@@ -22,11 +22,15 @@ func main() {
 		return
 	}
 
+	// Iterate through the array of files and copy the files from
+	// the source to destination directory
 	for _, f := range dir {
 		if f.IsDir() {
 			continue
 		}
 
+		// Create a goroutine for each file which will copy from
+		// the source to destination directory concurrently
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -65,14 +69,14 @@ func main() {
 				fmt.Println(err)
 				return
 			}
-
 		}()
 	}
 
 	wg.Wait()
-    os.Exit(0)
+	os.Exit(0)
 }
 
+// Read all the files in a directory
 func ReadDir(path string) ([]fs.DirEntry, error) {
 	dir, err := os.ReadDir(path)
 	if err != nil {
@@ -81,6 +85,7 @@ func ReadDir(path string) ([]fs.DirEntry, error) {
 	return dir, err
 }
 
+// Check if directory exists
 func DirExists(path string) (bool, error) {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -89,6 +94,8 @@ func DirExists(path string) (bool, error) {
 	return info.IsDir(), nil
 }
 
+// Checks if the directory exists and create a directory
+// if it doesn't
 func MakeDirectory(path string) error {
 	ok, err := DirExists(path)
 	if err != nil && !os.IsNotExist(err) {
@@ -106,22 +113,24 @@ func MakeDirectory(path string) error {
 	return nil
 }
 
-func GetPathArgs() (target, output string) {
+// Get the command-line arguments which are
+// the source and destination directory respectively
+func GetPathArgs() (source, destination string) {
 	args := os.Args
-	target, output = "", "./tmp"
+	source, destination = "", "./tmp"
 
 	if len(args) > 1 {
 		if len(args) >= 2 {
-			target = args[1]
+			source = args[1]
 		}
 
 		if len(args) >= 3 {
-			output = args[2]
+			destination = args[2]
 		}
 	} else {
 		fmt.Println("Target directory is required")
 		os.Exit(1)
 	}
 
-	return path.Clean(target), path.Clean(output)
+	return path.Clean(source), path.Clean(destination)
 }
