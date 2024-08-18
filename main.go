@@ -12,9 +12,7 @@ func main() {
 	src, dest := parseArguments()
 	fmt.Printf("Sorting %v to %v...\n", strings.Join(src, ", "), dest)
 
-	c := NewCounter()
-
-	sr := NewSorter(c, src, dest)
+	sr := NewSorter(src, dest)
 	err := sr.Start()
 	if err != nil {
 		log.Fatal(err)

@@ -15,7 +15,8 @@ type Sorter struct {
 
 var wg sync.WaitGroup
 
-func NewSorter(c *Counter, src []string, dest string) *Sorter {
+func NewSorter(src []string, dest string) *Sorter {
+	c := NewCounter()
 	return &Sorter{
 		c:    c,
 		src:  src,
