@@ -21,8 +21,6 @@ func main() {
 
 func parseArguments() (source []string, destination string) {
 	args := os.Args[1:]
-	source = []string{}
-	destination = ""
 
 	if len(args) < 1 {
 		log.Fatal("Source directory to be sorted required")
