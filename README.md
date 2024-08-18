@@ -15,10 +15,13 @@ make build
 Run the executable file, supplying the `source` and `destination` directory
 
 ```bash
-./fs source/directory destination/directory
+./fs [src/directory]... dest/directory
 ```
 
 ```bash
-# Sort download directory and output the file to /tmp
+# Sorts "Downloads" directory to "/tmp" directory
 ./fs ~/Downloads /tmp
+
+# Sorts both "Downloads" and "Documents" directory to "/tmp" directory
+./fs ~/Downloads ~/Documents /tmp
 ```
