@@ -55,7 +55,7 @@ func (s *Sorter) Start() error {
 
 func (s *Sorter) Sort(file string) {
 	fname := s.getFileName(file)
-	fmt.Println(fname)
+	fmt.Printf("Original: %v, New: %v\n", file, fname)
 }
 
 // Generate the filename to be saved in order to avoid duplication
@@ -64,24 +64,23 @@ func (s *Sorter) Sort(file string) {
 func (s *Sorter) getFileName(file string) string {
 	ctr := s.c.Add(file)
 	ext := path.Ext(file)
-	fname := file
 
 	// If a duplicate is found, where counter is not equal to 1.
 	// A count will be added to the file name.
-	if ctr != 1 && !s.isDotFile(fname) {
-		fname = fmt.Sprintf("%s (%d)%v",
-			strings.TrimSuffix(fname, ext),
+	if ctr != 1 && !s.isDotFile(file) {
+		file = fmt.Sprintf("%s (%d)%v",
+			strings.TrimSuffix(file, ext),
 			ctr-1,
 			ext)
 	}
 
-	if ctr != 1 && s.isDotFile(fname) {
-		fname = fmt.Sprintf("%s (%d)",
-			fname,
+	if ctr != 1 && s.isDotFile(file) {
+		file = fmt.Sprintf("%s (%d)",
+			file,
 			ctr-1)
 	}
 
-	return fname
+	return file
 }
 
 func (s *Sorter) readDirectory(path string) ([]fs.DirEntry, error) {
