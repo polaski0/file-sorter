@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
+	"strings"
 	"sync"
 )
 
@@ -38,7 +40,10 @@ func (s *Sorter) Start() error {
 			}
 
 			for _, fd := range fds {
-				fmt.Println(fd.Name())
+				fmt.Printf("Name: %v; Extension: %v; Is dotfile: %v\n",
+					fd.Name(),
+					path.Ext(fd.Name()),
+					s.isDotFile(fd.Name()))
 			}
 		}(source)
 	}
@@ -53,4 +58,8 @@ func (s *Sorter) readDirectory(path string) ([]fs.DirEntry, error) {
 		return nil, err
 	}
 	return fd, nil
+}
+
+func (s *Sorter) isDotFile(path string) bool {
+	return strings.HasPrefix(path, ".")
 }
