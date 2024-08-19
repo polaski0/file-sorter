@@ -31,7 +31,6 @@ func NewSorter(src []string, dest string) *Sorter {
 func (s *Sorter) Start() error {
 	for _, source := range s.src {
 		fmt.Printf("Reading `%v`...\n", source)
-
 		wg.Add(1)
 		go func(src string) {
 			defer wg.Done()
@@ -46,11 +45,13 @@ func (s *Sorter) Start() error {
 					continue
 				}
 
+				fmt.Printf("Sorting %v from %v...\n", fd.Name(), source)
 				err := s.Sort(fd.Name(), source)
 				if err != nil {
 					fmt.Printf("Error %v", err)
 					return
 				}
+				fmt.Printf("Sorted %v\n", fd.Name())
 			}
 		}(source)
 	}
@@ -59,10 +60,11 @@ func (s *Sorter) Start() error {
 	return nil
 }
 
-func (s *Sorter) Sort(file string, source string) error {
+func (s *Sorter) Sort(file, source string) error {
 	var dest string
 	ext := path.Ext(file)
-	// name := strings.TrimSuffix(file, ext)
+	done := make(chan bool)
+	error := make(chan error)
 
 	if isDotFile(file) || ext == "" {
 		dest = path.Join(s.dest, "misc")
@@ -75,39 +77,51 @@ func (s *Sorter) Sort(file string, source string) error {
 		return err
 	}
 
-	// First check if the file exists
-	exist, err := isFileExists(file, dest)
-	if err != nil {
-		return err
+	go s.createFile(file, source, dest, error, done)
+
+	for {
+		select {
+		case err := <-error:
+			return err
+		case <-done:
+			return nil
+		}
+	}
+}
+
+// the fuck?
+func (s *Sorter) createFile(file string, source string, dest string, error chan error, done chan bool) {
+	fname := s.getFileName(file) // what
+	exist, err := isFileExists(fname, dest)
+	if err != nil && !os.IsNotExist(err) {
+		error <- err
+	}
+
+	if exist {
+		s.c.Add(file)
+		go s.createFile(file, source, dest, error, done)
+		return
 	}
 
 	f, err := os.Open(path.Join(source, file))
 	if err != nil {
-		return err
+		error <- err
 	}
 	defer f.Close()
 
-	if exist {
-		// Increment counter by 1
-		// Re-check the destination if the
-		// file + incremented number exists
-		fmt.Printf("Exists, not yet implemented... %v %v", file, source)
-	} else {
-		// Copy file
-		rd := bufio.NewReader(f)
-		wr, err := os.Create(path.Join(dest, file))
-		if err != nil {
-			return err
-		}
-		defer wr.Close()
+	rd := bufio.NewReader(f)
+	wr, err := os.Create(path.Join(dest, fname))
+	if err != nil {
+		error <- err
+	}
+	defer wr.Close()
 
-		_, err = io.Copy(wr, rd)
-		if err != nil {
-			return err
-		}
+	_, err = io.Copy(wr, rd)
+	if err != nil {
+		error <- err
 	}
 
-	return nil
+	done <- true
 }
 
 func isFileExists(file, dir string) (bool, error) {

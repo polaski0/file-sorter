@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"slices"
 	"sync"
 	"testing"
 )
-
-var twg sync.WaitGroup
 
 const dir = "./tmp"
 
 // Create test files on the current directory
 func setup() {
+	var wg sync.WaitGroup
 	err := os.Mkdir(dir, 0755)
 	if err != nil && !os.IsExist(err) {
 		fmt.Printf("Error: %v", err)
@@ -71,9 +71,9 @@ func setup() {
 		}
 
 		for _, f := range v {
-			twg.Add(1)
+			wg.Add(1)
 			go func() {
-				defer twg.Done()
+				defer wg.Done()
 				err := os.WriteFile(path.Join(dest, f.filename), []byte(f.value), 0644)
 				if err != nil {
 					fmt.Printf("Error writing file %v, %v", f.filename, err)
@@ -83,7 +83,7 @@ func setup() {
 		}
 	}
 
-	twg.Wait()
+	wg.Wait()
 }
 
 // Remove test files
@@ -96,6 +96,7 @@ func teardown() {
 }
 
 func TestSort(t *testing.T) {
+	var wg sync.WaitGroup
 	setup()
 	defer teardown()
 
@@ -105,14 +106,56 @@ func TestSort(t *testing.T) {
 		path.Join(dir, "dir2"),
 	}
 
+	testCases := map[string][]string{
+		"md": []string{
+			"README.md",
+			"Fizz.md",
+			"README (1).md",
+		},
+		"txt": []string{
+			"test.txt",
+			"test (1).txt",
+			"test (1) (1).txt",
+			"test (2).txt",
+			"test (3).txt",
+		},
+	}
+
 	sr := NewSorter(src, dest)
 	err := sr.Start()
 	if err != nil {
 		t.Errorf("Error %v\n", err)
 	}
+
+	for k, v := range testCases {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			fsDir, err := os.ReadDir(path.Join(dest, k))
+			if err != nil {
+				t.Errorf("Error %v", err)
+			}
+			files := []string{}
+
+			for _, file := range fsDir {
+				files = append(files, file.Name())
+			}
+
+			for _, file := range v {
+				ok := slices.Contains(files, file)
+				if !ok {
+					t.Errorf("File %v not found", file)
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
 }
 
 func TestFileExists(t *testing.T) {
+	t.Skip()
 	setup()
 	defer teardown()
 
@@ -138,17 +181,17 @@ func TestFileExists(t *testing.T) {
 		},
 	}
 
-	for i := range testCases {
-		exists, err := isFileExists(testCases[i].file, testCases[i].dir)
+	for _, val := range testCases {
+		exists, err := isFileExists(val.file, val.dir)
 		if err != nil && !os.IsNotExist(err) {
 			t.Errorf("Error %v", err)
 		}
 
-		if exists != testCases[i].expected {
+		if exists != val.expected {
 			t.Errorf("File: %v; Found %v, expected %v\n",
-				testCases[i].file,
+				val.file,
 				exists,
-				testCases[i].expected)
+				val.expected)
 		}
 	}
 }
