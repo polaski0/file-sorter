@@ -98,7 +98,6 @@ func (s *Sorter) createFile(file string, source string, dest string, error chan 
 	}
 
 	if exist {
-		s.c.Add(file)
 		go s.createFile(file, source, dest, error, done)
 		return
 	}
