@@ -32,9 +32,9 @@ func (s *Sorter) Start() error {
 	for _, source := range s.src {
 		fmt.Printf("Reading `%v`...\n", source)
 		wg.Add(1)
-		go func(src string) {
+		go func() {
 			defer wg.Done()
-			fds, err := readDirectory(src)
+			fds, err := readDirectory(source)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				return
@@ -53,7 +53,7 @@ func (s *Sorter) Start() error {
 				}
 				fmt.Printf("Sorted %v\n", fd.Name())
 			}
-		}(source)
+		}()
 	}
 
 	wg.Wait()
