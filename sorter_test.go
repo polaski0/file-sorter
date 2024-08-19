@@ -155,7 +155,6 @@ func TestSort(t *testing.T) {
 }
 
 func TestFileExists(t *testing.T) {
-	t.Skip()
 	setup()
 	defer teardown()
 
