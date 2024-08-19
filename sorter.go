@@ -55,6 +55,8 @@ func (s *Sorter) Start() error {
 
 func (s *Sorter) Sort(file string) {
 	fname := s.getFileName(file)
+	// Sorting function here...
+	// Check first if file exists on the destination directory
 	fmt.Printf("Original: %v, New: %v\n", file, fname)
 }
 
