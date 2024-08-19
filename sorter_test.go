@@ -16,8 +16,8 @@ const dir = "./tmp"
 func setup() {
 	err := os.Mkdir(dir, 0755)
 	if err != nil && !os.IsExist(err) {
-        fmt.Printf("Error: %v", err)
-        return
+		fmt.Printf("Error: %v", err)
+		return
 	}
 
 	type File struct {
@@ -98,4 +98,57 @@ func teardown() {
 func TestSort(t *testing.T) {
 	setup()
 	defer teardown()
+
+	dest := path.Join(dir, "out")
+	src := []string{
+		path.Join(dir, "dir1"),
+		path.Join(dir, "dir2"),
+	}
+
+	sr := NewSorter(src, dest)
+	err := sr.Start()
+	if err != nil {
+		t.Errorf("Error %v\n", err)
+	}
+}
+
+func TestFileExists(t *testing.T) {
+	setup()
+	defer teardown()
+
+	testCases := []struct {
+		dir      string
+		file     string
+		expected bool
+	}{
+		{
+			dir:      path.Join(dir, "dir1"),
+			file:     "test.txt",
+			expected: true,
+		},
+		{
+			dir:      path.Join(dir, "dir1"),
+			file:     "test (1).txt",
+			expected: true,
+		},
+		{
+			dir:      path.Join(dir, "dir1"),
+			file:     "invalid-file.md",
+			expected: false,
+		},
+	}
+
+	for i := range testCases {
+		exists, err := isFileExists(testCases[i].file, testCases[i].dir)
+		if err != nil && !os.IsNotExist(err) {
+			t.Errorf("Error %v", err)
+		}
+
+		if exists != testCases[i].expected {
+			t.Errorf("File: %v; Found %v, expected %v\n",
+				testCases[i].file,
+				exists,
+				testCases[i].expected)
+		}
+	}
 }
